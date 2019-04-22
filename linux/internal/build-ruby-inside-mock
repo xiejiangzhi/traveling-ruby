@@ -201,7 +201,7 @@ echo $GEM_EXTENSION_API_VERSION > /tmp/ruby/info/GEM_EXTENSION_API_VERSION
 # Install gem-specific library dependencies.
 run mkdir -p /tmp/ruby/lib/ruby/gems/$RUBY_COMPAT_VERSION/deplibs/$GEM_PLATFORM
 pushd /tmp/ruby/lib/ruby/gems/$RUBY_COMPAT_VERSION/deplibs/$GEM_PLATFORM
-run mkdir curses && run cp $USRLIBDIR/libncursesw.so.5 curses/
+run mkdir curses && run cp $LIBDIR/libncursesw.so.5 curses/
 popd
 
 echo "Patching rbconfig.rb"
