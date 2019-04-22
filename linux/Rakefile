@@ -85,7 +85,6 @@ ARCHITECTURES.each do |arch|
       sh "./build-ruby -j #{CONCURRENCY} -a #{arch} -r #{ruby_version} runtime/#{ruby_version}-#{arch} output/#{ruby_version}-#{arch}"
     end
 
-
     desc "Test Ruby #{ruby_version} #{arch}"
     task "test:#{ruby_version}:#{arch}" => "output/#{ruby_version}-#{arch}/bin" do
       sh "./test-gems output/#{ruby_version}-#{arch}"

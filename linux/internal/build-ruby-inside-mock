@@ -180,7 +180,7 @@ else
 fi
 run cp $LIBDIR/libz.so.1 /tmp/ruby/lib/
 run cp $LIBDIR/libtermcap.so.2 /tmp/ruby/lib/
-run cp $USRLIBDIR/libreadline.so.5 /tmp/ruby/lib/
+run cp $LIBDIR/libreadline.so.6 /tmp/ruby/lib/
 run cp $FFILIBDIR/libffi.so.6 /tmp/ruby/lib/
 run cp /system/ca-bundle.crt /tmp/ruby/lib/
 run cp /system/restore_environment.rb /tmp/ruby/lib/
@@ -320,6 +320,7 @@ if $SANITY_CHECK_OUTPUT; then
 	(
 		SYSTEM_LIBRARIES="(linux-gate|linux-vdso|libpthread|librt|libdl|libcrypt|libm|libc"
 		SYSTEM_LIBRARIES="$SYSTEM_LIBRARIES|ld-linux.*|libutil|libnsl|libgcc_s|libstdc\+\+"
+    SYSTEM_LIBRARIES="$SYSTEM_LIBRARIES|libtinfo.*"
 		SYSTEM_LIBRARIES="$SYSTEM_LIBRARIES|libz|libtermcap|libreadline|libncursesw|libffi)\.so"
 		ERROR=false
 		set -o pipefail
