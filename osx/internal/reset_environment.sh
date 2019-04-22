@@ -1,6 +1,6 @@
 export PATH="$SELFDIR/internal/bin":/usr/bin:/bin:/usr/sbin:/sbin
-export MACOSX_DEPLOYMENT_TARGET=10.8
-export MACOSX_COMPATIBLE_DEPLOYMENT_TARGETS="10.8 10.9 10.10 10.11"
+export MACOSX_DEPLOYMENT_TARGET=10.14
+export MACOSX_COMPATIBLE_DEPLOYMENT_TARGETS="10.8 10.9 10.10 10.11 10.12 10.13 10.14"
 export CC="$SELFDIR/internal/bin/cc"
 export CXX="$SELFDIR/internal/bin/c++"
 unset DYLD_LIBRARY_PATH
