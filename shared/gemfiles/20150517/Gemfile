@@ -4,8 +4,8 @@ gem 'fast-stemmer'
 gem 'hitimes'
 gem 'redcarpet'
 gem 'snappy'
-gem 'pg'
-gem 'mysql2'
+# gem 'pg'
+# gem 'mysql2'
 gem 'puma', :platforms => :ruby
 gem 'kgio', :platforms => :ruby
 gem 'raindrops', :platforms => :ruby

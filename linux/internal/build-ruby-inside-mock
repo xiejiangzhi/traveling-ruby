@@ -261,7 +261,7 @@ if [[ "$DEBUG_SHELL" = before ]]; then
 	open_debug_shell
 fi
 if [[ -e /system/gemfiles ]]; then
-	run /tmp/ruby/bin/gem install bundler -v $BUNDLER_VERSION --no-rdoc --no-ri
+	run /tmp/ruby/bin/gem install bundler -v $BUNDLER_VERSION --no-document
 	if [[ "$DEBUG_SHELL" = after ]]; then
 		install_gems || true
 	else
