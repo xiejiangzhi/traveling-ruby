@@ -422,7 +422,7 @@ echo
 header "Compiling runtime libraries 2/$TOTAL_LIBS: ncurses..."
 if $SKIP_NCURSES; then
 	echo "Skipped."
-elif [[ ! -e "$RUNTIME_DIR/lib/libncurses.5.dylib" ]] || $FORCE_NCURSES; then
+elif [[ ! -e "$RUNTIME_DIR/lib/libncurses.6.dylib" ]] || $FORCE_NCURSES; then
 	run rm -f ncurses-$NCURSES_VERSION.tar.bz2
 	run curl --fail -L -O http://ftp.gnu.org/pub/gnu/ncurses/ncurses-$NCURSES_VERSION.tar.gz
 	run tar xzf ncurses-$NCURSES_VERSION.tar.gz
@@ -442,12 +442,12 @@ elif [[ ! -e "$RUNTIME_DIR/lib/libncurses.5.dylib" ]] || $FORCE_NCURSES; then
 
 	run rm -f "$RUNTIME_DIR/lib"/{libpanel,libmenu,libform}*
 	run rm -f "$RUNTIME_DIR/lib"/*.a
-	run strip -S "$RUNTIME_DIR/lib/libncurses.5.dylib"
+	run strip -S "$RUNTIME_DIR/lib/libncurses.6.dylib"
 	pushd "$RUNTIME_DIR/lib" >/dev/null
-	run ln -sf libncurses.5.dylib libtermcap.dylib
+	run ln -sf libncurses.6.dylib libtermcap.dylib
 	popd >/dev/null
-	run install_name_tool -id "@executable_path/../lib/libncurses.5.dylib" \
-		"$RUNTIME_DIR/lib/libncurses.5.dylib"
+	run install_name_tool -id "@executable_path/../lib/libncurses.6.dylib" \
+		"$RUNTIME_DIR/lib/libncurses.6.dylib"
 else
 	echo "Already installed."
 fi
