@@ -60,14 +60,14 @@ function download_and_extract()
 	local URL="$2"
 	local regex='\.bz2$'
 
-	run rm -f "$BASENAME"
-	run curl --fail -L -o "$BASENAME" "$URL"
+  if [[ ! -f "$BASENAME" ]]; then
+    run curl --fail -L -o "$BASENAME" "$URL"
+  fi
 	if [[ "$URL" =~ $regex ]]; then
 		run tar xjf "$BASENAME"
 	else
 		run tar xzf "$BASENAME"
 	fi
-	run rm "$BASENAME"
 }
 
 function usage()
@@ -221,23 +221,18 @@ CCACHE_VERSION=3.2.1
 CMAKE_VERSION=3.0.2
 PKG_CONFIG_VERSION=0.28
 AUTOCONF_VERSION=2.69
-AUTOMAKE_VERSION=1.15
+AUTOMAKE_VERSION=1.16.1
 LIBTOOL_VERSION=2.4.6
-OPENSSL_VERSION=1.0.2f
-NCURSES_VERSION=5.9
-LIBEDIT_VERSION=20141030-3.1
-LIBEDIT_DIR_VERSION=20141029-3.1
-GMP_VERSION=6.0.0a
-GMP_DIR_VERSION=6.0.0
+OPENSSL_VERSION=1.0.2r
+NCURSES_VERSION=6.1
+LIBEDIT_VERSION=20181209-3.1
+LIBEDIT_DIR_VERSION=20181209-3.1
+GMP_VERSION=6.1.2
+GMP_DIR_VERSION=6.1.2
 LIBFFI_VERSION=3.2.1
-LIBYAML_VERSION=0.1.5
-SQLITE3_VERSION=3080702
-XZ_VERSION=5.0.8
-MYSQL_LIB_VERSION=6.1.5
-POSTGRESQL_VERSION=9.3.5
-ICU_VERSION=54.1
-ICU_DIR_VERSION=54_1
-LIBSSH2_VERSION=1.4.3
+LIBYAML_VERSION=0.2.2
+SQLITE3_VERSION=3270200
+XZ_VERSION=5.2.4
 export PATH="$RUNTIME_DIR/bin:$PATH"
 export LIBRARY_PATH="$RUNTIME_DIR/lib"
 export DYLD_FALLBACK_LIBRARY_PATH="$RUNTIME_DIR/lib"
@@ -569,7 +564,7 @@ if $SKIP_SQLITE3; then
 	echo "Skipped."
 elif [[ ! -e "$RUNTIME_DIR/lib/libsqlite3.a" ]] || $FORCE_SQLITE3; then
 	download_and_extract sqlite-autoconf-$SQLITE3_VERSION.tar.gz \
-		http://www.sqlite.org/2014/sqlite-autoconf-$SQLITE3_VERSION.tar.gz
+		http://www.sqlite.org/2019/sqlite-autoconf-$SQLITE3_VERSION.tar.gz
 	echo "Entering $RUNTIME_DIR/sqlite-autoconf-$SQLITE3_VERSION"
 	pushd sqlite-autoconf-$SQLITE3_VERSION >/dev/null
 
@@ -606,115 +601,6 @@ elif [[ ! -e "$RUNTIME_DIR/lib/liblzma.5.dylib" ]] || $FORCE_LIBLZMA; then
 
 	run install_name_tool -id "@executable_path/../lib/liblzma.5.dylib" \
 		"$RUNTIME_DIR/lib/liblzma.5.dylib"
-else
-	echo "Already installed."
-fi
-echo
-
-header "Compiling runtime libraries 9/$TOTAL_LIBS: MySQL..."
-if $SKIP_MYSQL; then
-	echo "Skipped."
-elif [[ ! -e "$RUNTIME_DIR/lib/libmysqlclient.a" ]] || $FORCE_MYSQL; then
-	download_and_extract mysql-connector-c-$MYSQL_LIB_VERSION-src.tar.gz \
-		http://dev.mysql.com/get/Downloads/Connector-C/mysql-connector-c-$MYSQL_LIB_VERSION-src.tar.gz
-	echo "Entering $RUNTIME_DIR/mysql-connector-c-$MYSQL_LIB_VERSION-src"
-	pushd mysql-connector-c-$MYSQL_LIB_VERSION-src >/dev/null
-
-	# We do not use internal/bin/cc and c++ because MySQL includes
-	# yassl, which has an OpenSSL compatibility layer. We want the
-	# yassl headers to be used, not the OpenSSL headers in the runtime.
-	run cmake -DCMAKE_INSTALL_PREFIX="$RUNTIME_DIR" \
-		-DCMAKE_C_COMPILER=/usr/bin/cc \
-		-DCMAKE_CXX_COMPILER=/usr/bin/c++ \
-		-DCMAKE_C_FLAGS="-fPIC -fvisibility=hidden" \
-		-DCMAKE_CXX_FLAGS="-fPIC -fvisibility=hidden" . \
-		-DDISABLE_SHARED=1 \
-		-DCMAKE_VERBOSE_MAKEFILE=1
-	run make -j$CONCURRENCY libmysql
-	run make -C libmysql install
-	run make -C include install
-	run make -C scripts install
-
-	echo "Leaving source directory"
-	popd >/dev/null
-	run rm -rf mysql-connector-c-$MYSQL_LIB_VERSION-src
-else
-	echo "Already installed."
-fi
-echo
-
-header "Compiling runtime libraries 10/$TOTAL_LIBS: PostgreSQL..."
-if $SKIP_POSTGRESQL; then
-	echo "Skipped."
-elif [[ ! -e "$RUNTIME_DIR/lib/libpq.a" ]] || $FORCE_POSTGRESQL; then
-	download_and_extract postgresql-$POSTGRESQL_VERSION.tar.bz2 \
-		http://ftp.postgresql.org/pub/source/v9.3.5/postgresql-$POSTGRESQL_VERSION.tar.bz2
-	echo "Entering $RUNTIME_DIR/postgresql-$POSTGRESQL_VERSION"
-	pushd postgresql-$POSTGRESQL_VERSION >/dev/null
-
-	run ./configure --prefix="$RUNTIME_DIR" CFLAGS="-O2 -fPIC -fvisibility=hidden"
-	run make -j$CONCURRENCY -C src/common
-	run make -j$CONCURRENCY -C src/backend
-	run make -j$CONCURRENCY -C src/interfaces/libpq
-	run make -C src/interfaces/libpq install-strip
-	run make -j$CONCURRENCY -C src/include
-	run make -C src/include install-strip
-	run make -j$CONCURRENCY -C src/bin/pg_config
-	run make -C src/bin/pg_config install-strip
-
-	echo "Leaving source directory"
-	popd >/dev/null
-	run rm -rf postgresql-$POSTGRESQL_VERSION
-
-	run rm "$RUNTIME_DIR"/lib/libpq.*dylib
-else
-	echo "Already installed."
-fi
-echo
-
-header "Compiling runtime libraries 11/$TOTAL_LIBS: ICU..."
-if $SKIP_ICU; then
-	echo "Skipped."
-elif [[ ! -e "$RUNTIME_DIR/lib/libicudata.a" ]] || $FORCE_ICU; then
-	download_and_extract icu4c-$ICU_DIR_VERSION-src.tgz \
-		http://download.icu-project.org/files/icu4c/$ICU_VERSION/icu4c-$ICU_DIR_VERSION-src.tgz
-	echo "Entering $RUNTIME_DIR/icu4c-$ICU_DIR_VERSION-src"
-	pushd icu/source >/dev/null
-
-	run ./configure --prefix="$RUNTIME_DIR" --disable-samples --disable-tests \
-		--enable-static --disable-shared --with-library-bits=64 \
-		CFLAGS="-O2 -fPIC -fvisibility=hidden -DU_CHARSET_IS_UTF8=1 -DU_USING_ICU_NAMESPACE=0" \
-		CXXFLAGS="-O2 -fPIC -fvisibility=hidden -DU_CHARSET_IS_UTF8=1 -DU_USING_ICU_NAMESPACE=0"
-	run make -j$CONCURRENCY VERBOSE=1
-	run make install -j$CONCURRENCY
-
-	echo "Leaving source directory"
-	popd >/dev/null
-	run rm -rf icu
-else
-	echo "Already installed."
-fi
-echo
-
-header "Compiling runtime libraries 12/$TOTAL_LIBS: libssh2..."
-if $SKIP_LIBSSH2; then
-	echo "Skipped."
-elif [[ ! -e "$RUNTIME_DIR/lib/libssh2.a" ]] || $FORCE_LIBSSH2; then
-	download_and_extract libssh2-$LIBSSH2_VERSION.tar.gz \
-		http://www.libssh2.org/download/libssh2-$LIBSSH2_VERSION.tar.gz
-	echo "Entering $RUNTIME_DIR/libssh2-$LIBSSH2_VERSION"
-	pushd libssh2-$LIBSSH2_VERSION >/dev/null
-
-	run ./configure --prefix="$RUNTIME_DIR" --enable-static --disable-shared \
-		--with-openssl --with-libz --disable-examples-build --disable-debug \
-		CFLAGS="-O2 -fPIC -fvisibility=hidden" \
-		CXXFLAGS="-O2 -fPIC -fvisibility=hidden"
-	run make -j$CONCURRENCY
-	run make install-strip -j$CONCURRENCY
-
-	echo "Leaving source directory"
-	popd >/dev/null
-	run rm -rf libssh2-$LIBSSH2_VERSION
 else
 	echo "Already installed."
 fi
