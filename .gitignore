@@ -7,3 +7,4 @@
 /windows/output
 *.sublime-workspace
 *.tar.gz
+*.swp
