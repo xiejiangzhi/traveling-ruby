@@ -90,5 +90,5 @@ exec docker run \
 	-e "RUBY_VERSION=$RUBY_VERSION" \
 	-e "INITIALIZE=$INITIALIZE" \
 	phusion/traveling-ruby-builder \
-	/system/my_init --skip-runit --skip-startup-files -- \
+	/system/my_init --quiet --skip-runit --skip-startup-files -- \
 	/system/setup-runtime
