@@ -10,42 +10,18 @@ TEMPDIR=
 
 RUNTIME_DIR=
 CONCURRENCY=4
-FORCE_CCACHE=false
-SKIP_CCACHE=false
-FORCE_CMAKE=false
-SKIP_CMAKE=false
-FORCE_PKG_CONFIG=false
-SKIP_PKG_CONFIG=false
-FORCE_AUTOCONF=false
-SKIP_AUTOCONF=false
-FORCE_AUTOMAKE=false
-SKIP_AUTOMAKE=false
-FORCE_LIBTOOL=false
-SKIP_LIBTOOL=false
 FORCE_OPENSSL=false
 SKIP_OPENSSL=false
 FORCE_NCURSES=false
-SKIP_NCURSES=false
-FORCE_LIBEDIT=false
-SKIP_LIBEDIT=false
-FORCE_GMP=false
-SKIP_GMP=false
+SKIP_NCURSES=true # use system version
+FORCE_READLINE=false
+SKIP_READLINE=false
 FORCE_LIBFFI=false
-SKIP_LIBFFI=false
+SKIP_LIBFFI=true
 FORCE_LIBYAML=false
 SKIP_LIBYAML=false
 FORCE_SQLITE3=false
 SKIP_SQLITE3=false
-FORCE_LIBLZMA=false
-SKIP_LIBLZMA=false
-FORCE_MYSQL=false
-SKIP_MYSQL=false
-FORCE_POSTGRESQL=false
-SKIP_POSTGRESQL=false
-FORCE_ICU=false
-SKIP_ICU=false
-FORCE_LIBSSH2=false
-SKIP_LIBSSH2=false
 
 function _cleanup()
 {
@@ -80,26 +56,14 @@ function usage()
 	echo "  -O      Skip installing OpenSSL"
 	echo "  -n      Force installing ncurses"
 	echo "  -N      Skip installing ncurses"
-	echo "  -e      Force installing libedit"
-	echo "  -E      Skip installing libedit"
-	echo "  -e      Force installing GMP"
-	echo "  -E      Skip installing GMP"
+	echo "  -r      Force installing readline"
+	echo "  -R      Skip installing readline"
 	echo "  -f      Force installing libffi"
 	echo "  -F      Skip installing libffi"
 	echo "  -y      Force installing libyaml"
 	echo "  -Y      Skip installing libyaml"
 	echo "  -s      Force installing sqlite3"
 	echo "  -S      Skip installing sqlite3"
-	echo "  -z      Force installing liblzma"
-	echo "  -Z      Skip installing liblzma"
-	echo "  -m      Force installing MySQL"
-	echo "  -M      Skip installing MySQL"
-	echo "  -p      Force installing PostgreSQL"
-	echo "  -P      Skip installing PostgreSQL"
-	echo "  -i      Force installing ICU"
-	echo "  -I      Skip installing ICU"
-	echo "  -b      Force installing libssh2"
-	echo "  -B      Skip installing libssh2"
 	echo
 	echo "  -j NUM  Compilation concurrency. Default: 4"
 	echo "  -h      Show this help"
@@ -123,23 +87,17 @@ function parse_options()
 		N)
 			SKIP_NCURSES=true
 			;;
-		e)
-			FORCE_LIBEDIT=true
-			;;
-		E)
-			SKIP_LIBEDIT=true
-			;;
-		g)
-			FORCE_GMP=true
-			;;
-		G)
-			SKIP_GMP=true
-			;;
 		f)
 			FORCE_LIBFFI=true
 			;;
 		F)
 			SKIP_LIBFFI=true
+			;;
+    r)
+			FORCE_READLINE=true
+			;;
+		R)
+			SKIP_READLINE=true
 			;;
 		y)
 			FORCE_LIBYAML=true
@@ -152,36 +110,6 @@ function parse_options()
 			;;
 		S)
 			SKIP_SQLITE3=true
-			;;
-		z)
-			FORCE_LIBLZMA=true
-			;;
-		Z)
-			SKIP_LIBLZMA=true
-			;;
-		m)
-			FORCE_MYSQL=true
-			;;
-		M)
-			SKIP_MYSQL=true
-			;;
-		p)
-			FORCE_POSTGRESQL=true
-			;;
-		P)
-			SKIP_POSTGRESQL=true
-			;;
-		i)
-			FORCE_ICU=true
-			;;
-		I)
-			SKIP_ICU=true
-			;;
-		b)
-			FORCE_LIBSSH2=true
-			;;
-		B)
-			SKIP_LIBSSH2=true
 			;;
 		j)
 			CONCURRENCY=$OPTARG
@@ -217,22 +145,12 @@ RUNTIME_DIR="`cd \"$RUNTIME_DIR\" && pwd`"
 
 TOTAL_TOOLS=6
 TOTAL_LIBS=12
-CCACHE_VERSION=3.2.1
-CMAKE_VERSION=3.0.2
-PKG_CONFIG_VERSION=0.28
-AUTOCONF_VERSION=2.69
-AUTOMAKE_VERSION=1.16.1
-LIBTOOL_VERSION=2.4.6
-OPENSSL_VERSION=1.0.2r
+OPENSSL_VERSION=1.1.1b
 NCURSES_VERSION=6.1
-LIBEDIT_VERSION=20181209-3.1
-LIBEDIT_DIR_VERSION=20181209-3.1
-GMP_VERSION=6.1.2
-GMP_DIR_VERSION=6.1.2
+READLINE_VERSION=8.0
 LIBFFI_VERSION=3.2.1
 LIBYAML_VERSION=0.2.2
 SQLITE3_VERSION=3270200
-XZ_VERSION=5.2.4
 export PATH="$RUNTIME_DIR/bin:$PATH"
 export LIBRARY_PATH="$RUNTIME_DIR/lib"
 export DYLD_FALLBACK_LIBRARY_PATH="$RUNTIME_DIR/lib"
@@ -243,146 +161,22 @@ export DEAD_STRIP=true
 
 header "Initializing..."
 run mkdir -p "$RUNTIME_DIR"
-run mkdir -p "$RUNTIME_DIR/ccache"
-export CCACHE_DIR="$RUNTIME_DIR/ccache"
-export CCACHE_COMPRESS=1
-export CCACHE_COMPRESS_LEVEL=3
 echo "Entering $RUNTIME_DIR"
 cd "$RUNTIME_DIR"
 echo
 
-header "Installing tool 1/$TOTAL_TOOLS: ccache..."
-if $SKIP_CCACHE; then
-	echo "Skipped."
-elif [[ ! -e "$RUNTIME_DIR/bin/ccache" ]] || $FORCE_CCACHE; then
-	download_and_extract ccache-$CCACHE_VERSION.tar.gz \
-		http://samba.org/ftp/ccache/ccache-$CCACHE_VERSION.tar.gz
-	echo "Entering $RUNTIME_DIR/cmake-$CMAKE_VERSION"
-	pushd ccache-$CCACHE_VERSION >/dev/null
 
-	run ./configure --prefix="$RUNTIME_DIR"
-	run make -j$CONCURRENCY
-	run make install
-
-	echo "Leaving source directory"
-	popd >/dev/null
-	run rm -rf ccache-$CCACHE_VERSION
-else
-	echo "Already installed."
-fi
-echo
-
-header "Installing tool 2/$TOTAL_TOOLS: CMake..."
-if $SKIP_CMAKE; then
-	echo "Skipped."
-elif [[ ! -e "$RUNTIME_DIR/bin/cmake" ]] || $FORCE_CMAKE; then
-	download_and_extract cmake-$CMAKE_VERSION.tar.gz \
-		http://www.cmake.org/files/v3.0/cmake-$CMAKE_VERSION.tar.gz
-	echo "Entering $RUNTIME_DIR/cmake-$CMAKE_VERSION"
-	pushd cmake-$CMAKE_VERSION >/dev/null
-
-	run ./configure --prefix="$RUNTIME_DIR" --no-qt-gui --parallel=$CONCURRENCY
-	run make -j$CONCURRENCY
-	run make install
-
-	echo "Leaving source directory"
-	popd >/dev/null
-	run rm -rf cmake-$CMAKE_VERSION
-else
-	echo "Already installed."
-fi
-echo
-
-header "Installing tool 3/$TOTAL_TOOLS: pkg-config..."
-if $SKIP_PKG_CONFIG; then
-	echo "Skipped."
-elif [[ ! -e "$RUNTIME_DIR/bin/pkg-config" ]] || $FORCE_PKG_CONFIG; then
-	download_and_extract pkg-config-$PKG_CONFIG_VERSION.tar.gz \
-		http://pkgconfig.freedesktop.org/releases/pkg-config-$PKG_CONFIG_VERSION.tar.gz
-	echo "Entering $RUNTIME_DIR/pkg-config-$PKG_CONFIG_VERSION"
-	pushd pkg-config-$PKG_CONFIG_VERSION >/dev/null
-
-	run ./configure --prefix="$RUNTIME_DIR" --with-internal-glib
-	run make -j$CONCURRENCY
-	run make install
-	echo "Entering $RUNTIME_DIR"
-	popd >/dev/null
-	run rm -rf pkg-config-$PKG_CONFIG_VERSION
-else
-	echo "Already installed."
-fi
-echo
-
-header "Installing tool 4/$TOTAL_TOOLS: autoconf..."
-if $SKIP_AUTOCONF; then
-	echo "Skipped."
-elif [[ ! -e "$RUNTIME_DIR/bin/autoconf" ]] || $FORCE_AUTOCONF; then
-	download_and_extract autoconf-$AUTOCONF_VERSION.tar.gz \
-		http://ftp.gnu.org/gnu/autoconf/autoconf-$AUTOCONF_VERSION.tar.gz
-	echo "Entering $RUNTIME_DIR/autoconf-$AUTOCONF_VERSION"
-	pushd autoconf-$AUTOCONF_VERSION >/dev/null
-
-	run ./configure --prefix="$RUNTIME_DIR"
-	run make -j$CONCURRENCY
-	run make install-strip
-	echo "Entering $RUNTIME_DIR"
-	popd >/dev/null
-	run rm -rf autoconf-$AUTOCONF_VERSION
-else
-	echo "Already installed."
-fi
-echo
-
-header "Installing tool 5/$TOTAL_TOOLS: automake..."
-if $SKIP_AUTOMAKE; then
-	echo "Skipped."
-elif [[ ! -e "$RUNTIME_DIR/bin/automake" ]] || $FORCE_AUTOMAKE; then
-	download_and_extract automake-$AUTOMAKE_VERSION.tar.gz \
-		http://ftp.gnu.org/gnu/automake/automake-$AUTOMAKE_VERSION.tar.gz
-	echo "Entering $RUNTIME_DIR/automake-$AUTOMAKE_VERSION"
-	pushd automake-$AUTOMAKE_VERSION >/dev/null
-
-	run ./configure --prefix="$RUNTIME_DIR"
-	run make -j$CONCURRENCY
-	run make install-strip
-	echo "Entering $RUNTIME_DIR"
-	popd >/dev/null
-	run rm -rf automake-$AUTOMAKE_VERSION
-else
-	echo "Already installed."
-fi
-echo
-
-header "Installing tool 6/$TOTAL_TOOLS: libtool..."
-if $SKIP_LIBTOOL; then
-	echo "Skipped."
-elif [[ ! -e "$RUNTIME_DIR/bin/libtoolize" ]] || $FORCE_LIBTOOL; then
-	download_and_extract libtool-$LIBTOOL_VERSION.tar.gz \
-		http://ftp.gnu.org/gnu/libtool/libtool-$LIBTOOL_VERSION.tar.gz
-	echo "Entering $RUNTIME_DIR/libtool-$LIBTOOL_VERSION"
-	pushd libtool-$LIBTOOL_VERSION >/dev/null
-
-	run ./configure --prefix="$RUNTIME_DIR" \
-		--disable-shared --enable-static \
-		CFLAGS='-O2 -fPIC -fvisibility=hidden'
-	run make -j$CONCURRENCY
-	run make install-strip
-	echo "Entering $RUNTIME_DIR"
-	popd >/dev/null
-	run rm -rf libtool-$LIBTOOL_VERSION
-else
-	echo "Already installed."
-fi
-echo
+BUILD_TOOLS="cmake autoconf automake pkg-config libtool"
+header "Installing tool ${BUILD_TOOLS}by homebrew..."
+HOMEBREW_NO_AUTO_UPDATE=1 brew install $BUILD_TOOLS || true
 
 header "Compiling runtime libraries 1/$TOTAL_LIBS: OpenSSL..."
 if $SKIP_OPENSSL; then
 	echo "Skipped."
 elif [[ ! -e "$RUNTIME_DIR/lib/openssl-ok" ]] || $FORCE_OPENSSL; then
-	run rm -f openssl-$OPENSSL_VERSION.tar.gz
-	run curl --fail -L -O https://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz
-	run tar xzf openssl-$OPENSSL_VERSION.tar.gz
-	run rm openssl-$OPENSSL_VERSION.tar.gz
+  download_and_extract openssl-$OPENSSL_VERSION.tar.gz \
+    https://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz
+
 	echo "Entering $RUNTIME_DIR/openssl-$OPENSSL_VERSION"
 	pushd openssl-$OPENSSL_VERSION >/dev/null
 
@@ -403,13 +197,13 @@ elif [[ ! -e "$RUNTIME_DIR/lib/openssl-ok" ]] || $FORCE_OPENSSL; then
 	run strip bin/openssl
 	run strip -S lib/libcrypto.dylib
 	run strip -S lib/libssl.dylib
-	run install_name_tool -id "@executable_path/../lib/libssl.1.0.0.dylib" \
-		"$RUNTIME_DIR/lib/libssl.1.0.0.dylib"
+	run install_name_tool -id "@executable_path/../lib/libssl.dylib" \
+		"$RUNTIME_DIR/lib/libssl.dylib"
 	run install_name_tool -change \
-		"$RUNTIME_DIR/lib/libcrypto.1.0.0.dylib" "@executable_path/../lib/libcrypto.1.0.0.dylib" \
-		"$RUNTIME_DIR/lib/libssl.1.0.0.dylib"
-	run install_name_tool -id "@executable_path/../lib/libcrypto.1.0.0.dylib" \
-		"$RUNTIME_DIR/lib/libcrypto.1.0.0.dylib"
+		"$RUNTIME_DIR/lib/libcrypto.dylib" "@executable_path/../lib/libcrypto.dylib" \
+		"$RUNTIME_DIR/lib/libssl.dylib"
+	run install_name_tool -id "@executable_path/../lib/libcrypto.dylib" \
+		"$RUNTIME_DIR/lib/libcrypto.dylib"
 
 	run sed -i '' 's/^Libs\.private:.*/Libs.private: -L\${libdir} -lssl -lcrypto -lz/' "$RUNTIME_DIR/lib/pkgconfig/openssl.pc"
 	run sed -i '' 's/^Libs\.private:.*/Libs.private: -L\${libdir} -lssl -lcrypto -lz/' "$RUNTIME_DIR/lib/pkgconfig/libssl.pc"
@@ -423,10 +217,8 @@ header "Compiling runtime libraries 2/$TOTAL_LIBS: ncurses..."
 if $SKIP_NCURSES; then
 	echo "Skipped."
 elif [[ ! -e "$RUNTIME_DIR/lib/libncurses.6.dylib" ]] || $FORCE_NCURSES; then
-	run rm -f ncurses-$NCURSES_VERSION.tar.bz2
-	run curl --fail -L -O http://ftp.gnu.org/pub/gnu/ncurses/ncurses-$NCURSES_VERSION.tar.gz
-	run tar xzf ncurses-$NCURSES_VERSION.tar.gz
-	run rm ncurses-$NCURSES_VERSION.tar.gz
+  download_and_extract ncurses-$NCURSES_VERSION.tar.gz \
+	  http://ftp.gnu.org/pub/gnu/ncurses/ncurses-$NCURSES_VERSION.tar.gz
 	echo "Entering $RUNTIME_DIR/ncurses-$NCURSES_VERSION"
 	pushd ncurses-$NCURSES_VERSION >/dev/null
 
@@ -453,69 +245,41 @@ else
 fi
 echo
 
-header "Compiling runtime libraries 3/$TOTAL_LIBS: libedit..."
-if $SKIP_LIBEDIT; then
+header "Compiling runtime libraries 3/$TOTAL_LIBS: readline..."
+if $SKIP_READLINE; then
 	echo "Skipped."
-elif [[ ! -e "$RUNTIME_DIR/lib/libedit.0.dylib" ]] || $FORCE_LIBEDIT; then
-	run rm -f libedit-$LIBEDIT_VERSION.tar.gz
-	run curl --fail -L -O http://thrysoee.dk/editline/libedit-$LIBEDIT_VERSION.tar.gz
-	run tar xzf libedit-$LIBEDIT_VERSION.tar.gz
-	run rm libedit-$LIBEDIT_VERSION.tar.gz
-	echo "Entering $RUNTIME_DIR/libedit-$LIBEDIT_VERSION"
-	pushd libedit-$LIBEDIT_DIR_VERSION >/dev/null
+elif [[ ! -e "$RUNTIME_DIR/lib/libreadline.8.dylib" ]] || $FORCE_READLINE; then
+  PKG_NAME="readline-$READLINE_VERSION"
+  download_and_extract $PKG_NAME.tar.gz \
+	  ftp://ftp.cwru.edu/pub/bash/$PKG_NAME.tar.gz
+	echo "Entering $RUNTIME_DIR/$PKG_NAME"
+	pushd $PKG_NAME >/dev/null
 
 	run ./configure --prefix="$RUNTIME_DIR" --disable-static --enable-widec
 	run make -j$CONCURRENCY
-	run make install-strip
+	run make install
 	
 	echo "Leaving source directory"
 	popd >/dev/null
-	run rm -rf libedit-$LIBEDIT_DIR_VERSION
+	run rm -rf $PKG_NAME
 
 	pushd "$RUNTIME_DIR/lib" >/dev/null
-	run ln -sf libedit.0.dylib libreadline.dylib
+	run ln -sf libreadline.8.dylib libreadline.dylib
 	popd >/dev/null
-	run install_name_tool -id "@executable_path/../lib/libedit.0.dylib" \
-		"$RUNTIME_DIR/lib/libedit.0.dylib"
+	run install_name_tool -id "@executable_path/../lib/libreadline.8.dylib" \
+		"$RUNTIME_DIR/lib/libreadline.8.dylib"
 else
 	echo "Already installed."
 fi
 echo
 
-header "Compiling runtime libraries 4/$TOTAL_LIBS: gmp..."
-if $SKIP_GMP; then
-	echo "Skipped."
-elif [[ ! -e "$RUNTIME_DIR/lib/libgmp.10.dylib" ]] || $FORCE_GMP; then
-	run rm -f gmp-$GMP_VERSION.tar.bz2
-	run curl --fail -L -O https://gmplib.org/download/gmp/gmp-$GMP_VERSION.tar.bz2
-	run tar xjf gmp-$GMP_VERSION.tar.bz2
-	run rm gmp-$GMP_VERSION.tar.bz2
-	echo "Entering $RUNTIME_DIR/gmp-$GMP_VERSION"
-	pushd gmp-$GMP_DIR_VERSION >/dev/null
-
-	run ./configure --prefix="$RUNTIME_DIR" --disable-static --without-readline
-	run make -j$CONCURRENCY
-	run make install-strip
-	
-	echo "Leaving source directory"
-	popd >/dev/null
-	run rm -rf gmp-$GMP_DIR_VERSION
-
-	run install_name_tool -id "@executable_path/../lib/libgmp.10.dylib" \
-		"$RUNTIME_DIR/lib/libgmp.10.dylib"
-else
-	echo "Already installed."
-fi
-echo
 
 header "Compiling runtime libraries 5/$TOTAL_LIBS: libffi..."
 if $SKIP_LIBFFI; then
 	echo "Skipped."
 elif [[ ! -e "$RUNTIME_DIR/lib/libffi.6.dylib" ]] || $FORCE_LIBFFI; then
-	run rm -f libffi-$LIBFFI_VERSION.tar.bz2
-	run curl --fail -L -O ftp://sourceware.org/pub/libffi/libffi-$LIBFFI_VERSION.tar.gz
-	run tar xzf libffi-$LIBFFI_VERSION.tar.gz
-	run rm libffi-$LIBFFI_VERSION.tar.gz
+  download_and_extract libffi-$LIBFFI_VERSION.tar.gz \
+	  ftp://sourceware.org/pub/libffi/libffi-$LIBFFI_VERSION.tar.gz
 	echo "Entering $RUNTIME_DIR/libffi-$LIBFFI_VERSION"
 	pushd libffi-$LIBFFI_VERSION >/dev/null
 
@@ -575,32 +339,6 @@ elif [[ ! -e "$RUNTIME_DIR/lib/libsqlite3.a" ]] || $FORCE_SQLITE3; then
 	echo "Entering $RUNTIME_DIR"
 	popd >/dev/null
 	run rm -rf sqlite-autoconf-$SQLITE3_VERSION
-else
-	echo "Already installed."
-fi
-echo
-
-header "Compiling runtime libraries 8/$TOTAL_LIBS: liblzma..."
-if $SKIP_LIBLZMA; then
-	echo "Skipped."
-elif [[ ! -e "$RUNTIME_DIR/lib/liblzma.5.dylib" ]] || $FORCE_LIBLZMA; then
-	download_and_extract xz-$XZ_VERSION.tar.bz2 \
-		http://tukaani.org/xz/xz-$XZ_VERSION.tar.bz2
-	echo "Entering $RUNTIME_DIR/xz-$XZ_VERSION"
-	pushd xz-$XZ_VERSION >/dev/null
-
-	run ./configure --prefix="$RUNTIME_DIR" --disable-static --disable-xz \
-		--disable-xzdec --disable-lzmadec --disable-lzmainfo --disable-lzma-links \
-		--disable-scripts --disable-doc
-	run make -j$CONCURRENCY
-	run make install-strip
-
-	echo "Leaving source directory"
-	popd >/dev/null
-	run rm -rf xz-$XZ_VERSION
-
-	run install_name_tool -id "@executable_path/../lib/liblzma.5.dylib" \
-		"$RUNTIME_DIR/lib/liblzma.5.dylib"
 else
 	echo "Already installed."
 fi
