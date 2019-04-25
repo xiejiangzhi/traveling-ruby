@@ -1,11 +1,3 @@
-# Traveling Ruby: self-contained, portable Ruby binaries
-
-![](https://openclipart.org/image/300px/svg_to_png/181225/Travel_backpacks.png)
-
-Traveling Ruby is a project which supplies self-contained, "portable" Ruby binaries: Ruby binaries that can run on any Linux distribution and any OS X machine. It also has Windows support [(with some caveats)](#caveats). This allows Ruby app developers to bundle these binaries with their Ruby app, so that they can distribute a single package to end users, without needing end users to first install Ruby or gems.
-
-[![](https://raw.githubusercontent.com/phusion/traveling-ruby/master/doc/video.png)](https://vimeo.com/phusionnl/review/113827942/ceca7e70da)
-
 # Update 2.6.3 for OSX and Linux
 
 ## System
@@ -23,9 +15,18 @@ And build without `libgmp` on OSX. Socket extension library get a error when I i
 
 ## Native Extension Gems
 
-Only keep `concurrent-ruby`, `activesupport`, `sqlite3`
+Only keep `sqlite3`
 
 I think you should build them yourself if you want other.
+
+
+# Traveling Ruby: self-contained, portable Ruby binaries
+
+![](https://openclipart.org/image/300px/svg_to_png/181225/Travel_backpacks.png)
+
+Traveling Ruby is a project which supplies self-contained, "portable" Ruby binaries: Ruby binaries that can run on any Linux distribution and any OS X machine. It also has Windows support [(with some caveats)](#caveats). This allows Ruby app developers to bundle these binaries with their Ruby app, so that they can distribute a single package to end users, without needing end users to first install Ruby or gems.
+
+[![](https://raw.githubusercontent.com/phusion/traveling-ruby/master/doc/video.png)](https://vimeo.com/phusionnl/review/113827942/ceca7e70da)
 
 
 _Introduction in 2 minutes_
