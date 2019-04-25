@@ -6,6 +6,28 @@ Traveling Ruby is a project which supplies self-contained, "portable" Ruby binar
 
 [![](https://raw.githubusercontent.com/phusion/traveling-ruby/master/doc/video.png)](https://vimeo.com/phusionnl/review/113827942/ceca7e70da)
 
+# Update 2.6.3 for OSX and Linux
+
+## System
+
+* OSX: build on `OSX 10.14`, I tried the binary is valid on `OSX 10.13`.
+* Linux: Use `epel-6-*`. I got a error when run build on OSX. Run on Ubuntu is good
+
+## Build
+
+Removed extension libraries `*dbm`, I am lazy to build it.
+In the old version, removed `*dbm`, `tk`(2.6 has no this), `dl`(2.6 has no this), `coverage`.
+
+And build without `libgmp` on OSX. Socket extension library get a error when I include `libgmp`, so I removed it.
+
+
+## Native Extension Gems
+
+Only keep `concurrent-ruby`, `activesupport`, `sqlite3`
+
+I think you should build them yourself if you want other.
+
+
 _Introduction in 2 minutes_
 
 ## Motivation
