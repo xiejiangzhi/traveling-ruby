@@ -19,6 +19,10 @@ Only keep `sqlite3`
 
 I think you should build them yourself if you want other.
 
+## Binary Download
+
+https://drive.google.com/drive/folders/1j2pOKHu7Kc175DgRdiD_YhkMjz-fwFSt
+
 
 # Traveling Ruby: self-contained, portable Ruby binaries
 
