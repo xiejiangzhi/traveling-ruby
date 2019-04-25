@@ -17,7 +17,7 @@ SKIP_NCURSES=true # use system version
 FORCE_READLINE=false
 SKIP_READLINE=false
 FORCE_LIBFFI=false
-SKIP_LIBFFI=true
+SKIP_LIBFFI=true # use system version
 FORCE_LIBYAML=false
 SKIP_LIBYAML=false
 FORCE_SQLITE3=false
@@ -54,8 +54,6 @@ function usage()
 	echo "Options:"
 	echo "  -o      Force installing OpenSSL"
 	echo "  -O      Skip installing OpenSSL"
-	echo "  -n      Force installing ncurses"
-	echo "  -N      Skip installing ncurses"
 	echo "  -r      Force installing readline"
 	echo "  -R      Skip installing readline"
 	echo "  -f      Force installing libffi"
@@ -73,19 +71,13 @@ function parse_options()
 {
 	local OPTIND=1
 	local opt
-	while getopts "oOnNeEgGfFyYsSzZmMpPiIbBj:h" opt; do
+	while getopts "oOyYsS:h" opt; do
 		case "$opt" in
 		o)
 			FORCE_OPENSSL=true
 			;;
 		O)
 			SKIP_OPENSSL=true
-			;;
-		n)
-			FORCE_NCURSES=true
-			;;
-		N)
-			SKIP_NCURSES=true
 			;;
 		f)
 			FORCE_LIBFFI=true
@@ -146,7 +138,6 @@ RUNTIME_DIR="`cd \"$RUNTIME_DIR\" && pwd`"
 TOTAL_TOOLS=6
 TOTAL_LIBS=12
 OPENSSL_VERSION=1.1.1b
-NCURSES_VERSION=6.1
 READLINE_VERSION=8.0
 LIBFFI_VERSION=3.2.1
 LIBYAML_VERSION=0.2.2
@@ -197,13 +188,13 @@ elif [[ ! -e "$RUNTIME_DIR/lib/openssl-ok" ]] || $FORCE_OPENSSL; then
 	run strip bin/openssl
 	run strip -S lib/libcrypto.dylib
 	run strip -S lib/libssl.dylib
-	run install_name_tool -id "@executable_path/../lib/libssl.dylib" \
-		"$RUNTIME_DIR/lib/libssl.dylib"
+	run install_name_tool -id "@executable_path/../lib/libssl.1.1.dylib" \
+		"$RUNTIME_DIR/lib/libssl.1.1.dylib"
 	run install_name_tool -change \
-		"$RUNTIME_DIR/lib/libcrypto.dylib" "@executable_path/../lib/libcrypto.dylib" \
-		"$RUNTIME_DIR/lib/libssl.dylib"
-	run install_name_tool -id "@executable_path/../lib/libcrypto.dylib" \
-		"$RUNTIME_DIR/lib/libcrypto.dylib"
+		"$RUNTIME_DIR/lib/libcrypto.1.1.dylib" "@executable_path/../lib/libcrypto.1.1.dylib" \
+		"$RUNTIME_DIR/lib/libssl.1.1.dylib"
+	run install_name_tool -id "@executable_path/../lib/libcrypto.1.1.dylib" \
+		"$RUNTIME_DIR/lib/libcrypto.1.1.dylib"
 
 	run sed -i '' 's/^Libs\.private:.*/Libs.private: -L\${libdir} -lssl -lcrypto -lz/' "$RUNTIME_DIR/lib/pkgconfig/openssl.pc"
 	run sed -i '' 's/^Libs\.private:.*/Libs.private: -L\${libdir} -lssl -lcrypto -lz/' "$RUNTIME_DIR/lib/pkgconfig/libssl.pc"
@@ -213,37 +204,6 @@ else
 fi
 echo
 
-header "Compiling runtime libraries 2/$TOTAL_LIBS: ncurses..."
-if $SKIP_NCURSES; then
-	echo "Skipped."
-elif [[ ! -e "$RUNTIME_DIR/lib/libncurses.6.dylib" ]] || $FORCE_NCURSES; then
-  download_and_extract ncurses-$NCURSES_VERSION.tar.gz \
-	  http://ftp.gnu.org/pub/gnu/ncurses/ncurses-$NCURSES_VERSION.tar.gz
-	echo "Entering $RUNTIME_DIR/ncurses-$NCURSES_VERSION"
-	pushd ncurses-$NCURSES_VERSION >/dev/null
-
-	run ./configure --prefix="$RUNTIME_DIR" --with-shared --without-normal --without-cxx --without-cxx-binding \
-		--without-ada --without-manpages --without-progs --without-tests --enable-pc-files \
-		--without-develop
-	run make -j$CONCURRENCY
-	run make install
-	
-	echo "Leaving source directory"
-	popd >/dev/null
-	run rm -rf ncurses-$NCURSES_VERSION
-
-	run rm -f "$RUNTIME_DIR/lib"/{libpanel,libmenu,libform}*
-	run rm -f "$RUNTIME_DIR/lib"/*.a
-	run strip -S "$RUNTIME_DIR/lib/libncurses.6.dylib"
-	pushd "$RUNTIME_DIR/lib" >/dev/null
-	run ln -sf libncurses.6.dylib libtermcap.dylib
-	popd >/dev/null
-	run install_name_tool -id "@executable_path/../lib/libncurses.6.dylib" \
-		"$RUNTIME_DIR/lib/libncurses.6.dylib"
-else
-	echo "Already installed."
-fi
-echo
 
 header "Compiling runtime libraries 3/$TOTAL_LIBS: readline..."
 if $SKIP_READLINE; then
@@ -268,6 +228,8 @@ elif [[ ! -e "$RUNTIME_DIR/lib/libreadline.8.dylib" ]] || $FORCE_READLINE; then
 	popd >/dev/null
 	run install_name_tool -id "@executable_path/../lib/libreadline.8.dylib" \
 		"$RUNTIME_DIR/lib/libreadline.8.dylib"
+	run install_name_tool -id "@executable_path/../lib/libhistory.8.dylib" \
+		"$RUNTIME_DIR/lib/libhistory.8.dylib"
 else
 	echo "Already installed."
 fi
@@ -326,19 +288,22 @@ echo
 header "Compiling runtime libraries 7/$TOTAL_LIBS: sqlite3..."
 if $SKIP_SQLITE3; then
 	echo "Skipped."
-elif [[ ! -e "$RUNTIME_DIR/lib/libsqlite3.a" ]] || $FORCE_SQLITE3; then
+elif [[ ! -e "$RUNTIME_DIR/lib/libsqlite3.0.dylib" ]] || $FORCE_SQLITE3; then
 	download_and_extract sqlite-autoconf-$SQLITE3_VERSION.tar.gz \
 		http://www.sqlite.org/2019/sqlite-autoconf-$SQLITE3_VERSION.tar.gz
 	echo "Entering $RUNTIME_DIR/sqlite-autoconf-$SQLITE3_VERSION"
 	pushd sqlite-autoconf-$SQLITE3_VERSION >/dev/null
 
-	run ./configure --prefix="$RUNTIME_DIR" --disable-shared \
-		--disable-dynamic-extensions CFLAGS='-O2 -fPIC -fvisibility=hidden'
+	run ./configure --prefix="$RUNTIME_DIR" CFLAGS='-Os -fPIC'
 	run make -j$CONCURRENCY
 	run make install-strip
 	echo "Entering $RUNTIME_DIR"
 	popd >/dev/null
 	run rm -rf sqlite-autoconf-$SQLITE3_VERSION
+  rm "$RUNTIME_DIR/lib/libsqlite3.a"
+
+	run install_name_tool -id "@executable_path/../lib/libsqlite3.0.dylib" \
+		"$RUNTIME_DIR/lib/libsqlite3.0.dylib"
 else
 	echo "Already installed."
 fi

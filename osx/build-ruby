@@ -19,6 +19,7 @@ CONCURRENCY=4
 GEMFILE="$SELFDIR/../shared/gemfiles"
 SETUP_SOURCE=true
 COMPILE=true
+TMP_INSTALL=true
 
 function _cleanup()
 {
@@ -262,7 +263,8 @@ if $SETUP_SOURCE; then
     --disable-install-capi \
     --with-out-ext=*dbm \
     --without-gmp \
-    --with-openssl-dir="$RUNTIME_DIR"
+    --with-openssl-dir="$RUNTIME_DIR" \
+    --with-libyaml-dir="$RUNTIME_DIR"
   echo
 fi
 
@@ -275,16 +277,19 @@ if $COMPILE; then
 fi
 
 
-header "Installing to temporary build output directory..."
-(
-  shopt -s dotglob
-  run mkdir -p "$TMPBUILDROOT"
-  run rm -rf "$TMPBUILDROOT"/*
-)
-[[ $? == 0 ]]
-ln -sf $RUNTIME_DIR/lib $WORKDIR/lib
-run make install-nodoc
-echo
+if $TMP_INSTALL; then
+  header "Installing to temporary build output directory..."
+  (
+    shopt -s dotglob
+    run mkdir -p "$TMPBUILDROOT"
+    run rm -rf "$TMPBUILDROOT"/*
+  )
+  [[ $? == 0 ]]
+  run ln -sf $RUNTIME_DIR/lib $WORKDIR/lib
+  run make install-nodoc
+  run rm $WORKDIR/lib
+  echo
+fi
 
 
 header "Postprocessing build output..."
