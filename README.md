@@ -3,7 +3,7 @@
 ## System
 
 * OSX: build on `OSX 10.14`, I tried the binary is valid on `OSX 10.13`.
-* Linux: Use `epel-6-*`. I got a error when run build on OSX. Run on Ubuntu is good
+* Linux: Use `epel-7-*`. build with docker
 
 ## Build
 
@@ -15,9 +15,8 @@ And build without `libgmp` on OSX. Socket extension library get a error when I i
 
 ## Native Extension Gems
 
-Only keep `sqlite3`
-
 I think you should build them yourself if you want other.
+
 
 ## Binary Download
 

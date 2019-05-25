@@ -80,12 +80,16 @@ RUNTIME_DIR=`cd "$RUNTIME_DIR" && pwd`
 header "Preparing"
 run mkdir -p "$RUNTIME_DIR/mock"
 
+[[ -f $RUNTIME_DIR/ok ]] && exit 0
+
+vol_name=traveling-ruby-mock-$(basename $RUNTIME_DIR)
+exec docker volume ls | grep $vol_name || docker volume create $vol_name
 exec docker run \
 	--rm \
-	--privileged \
+  --privileged \
 	-v "$SELFDIR/internal:/system:ro" \
 	-v "$SELFDIR/../shared:/system_shared:ro" \
-	-v "$RUNTIME_DIR/mock:/var/lib/mock" \
+	-v "$vol_name:/var/lib/mock" \
 	-e "ARCHITECTURE=$ARCHITECTURE" \
 	-e "RUBY_VERSION=$RUBY_VERSION" \
 	-e "INITIALIZE=$INITIALIZE" \

@@ -25,12 +25,9 @@ function create_group()
 set -x
 
 cd /tmp
-rpm -Uvh http://mirror.overthewire.com.au/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
 yum update -y
-yum install -y --skip-broken --enablerepo centosplus \
-	centos-release-SCL file db4-utils compat-db43 mock wget s3cmd
-yum install -y --skip-broken --enablerepo centosplus \
-	python27-python
+yum install -y --enablerepo centosplus \
+	centos-release-SCL file db4-utils compat-db43 mock wget epel-release
 create_user app "App" 1000
 usermod -a -G mock app
 mkdir -p /etc/container_environment /etc/workaround-docker-2267

@@ -179,7 +179,7 @@ else
 	FFILIBDIR=/usr/local/override/lib64
 fi
 run cp $LIBDIR/libz.so.1 /tmp/ruby/lib/
-run cp $LIBDIR/libtermcap.so.2 /tmp/ruby/lib/
+# run cp $LIBDIR/libtermcap.so.2 /tmp/ruby/lib/
 run cp $LIBDIR/libreadline.so.6 /tmp/ruby/lib/
 run cp $FFILIBDIR/libffi.so.6 /tmp/ruby/lib/
 run cp /system/ca-bundle.crt /tmp/ruby/lib/
@@ -225,7 +225,7 @@ function install_gems()
     # We set -j to 1 because of this bug:
     # https://github.com/bundler/bundler/issues/3660
     # When it is solved, we can set -j to $CONCURRENCY.
-    run /tmp/ruby/bin/bundle install --system --retry 3 --jobs 1
+    run /tmp/ruby/bin/bundle install --system --retry 3 --jobs $CONCURRENCY
     run rm Gemfile*
     echo "+ Leaving /tmp/ruby"
     popd >/dev/null
@@ -250,6 +250,8 @@ function open_debug_shell()
 	bash || true
 	popd >/dev/null
 }
+
+
 
 export DEFAULT_LDFLAGS=`/tmp/ruby/bin/ruby -rrbconfig -e 'puts RbConfig::CONFIG["LDFLAGS"]'`
 export BUNDLE_BUILD__CHARLOCK_HOLMES=--with-ldflags="'$DEFAULT_LDFLAGS -Wl,--whole-archive -licui18n -licuuc -licudata -Wl,--no-whole-archive -lstdc++'"

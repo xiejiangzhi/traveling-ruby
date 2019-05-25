@@ -5,14 +5,12 @@ SELFDIR=`dirname "$0"`
 SELFDIR=`cd "$SELFDIR" && pwd`
 source "$SELFDIR/../shared/library.sh"
 
-CPUCOUNT=`"$SELFDIR/internal/cpucount"`
 RUBY_VERSIONS=(`cat "$SELFDIR/../RUBY_VERSIONS.txt"`)
 
 RUNTIME_DIR=
 OUTPUT_DIR=
 ARCHITECTURE=
 RUBY_VERSION=${RUBY_VERSIONS[0]}
-CONCURRENCY=$CPUCOUNT
 GEMFILE="$SELFDIR/../shared/gemfiles"
 DEBUG_SHELL=none
 SETUP_SOURCE=true
@@ -33,7 +31,6 @@ function usage()
 	echo "  -C          Do not compile Ruby"
 	echo "  -G          Do not install gems"
 	echo
-	echo "  -j NUMBER   Set build concurrency. Default: $CPUCOUNT"
 	echo "  -g PATH     Build gems as specified by the given Gemfile"
 	echo "  -d          Open a debugging shell before installing gems"
 	echo "  -D          Open a debugging shell after installing gems"
@@ -60,9 +57,6 @@ function parse_options()
 			;;
 		G)
 			GEMFILE=
-			;;
-		j)
-			CONCURRENCY=$OPTARG
 			;;
 		g)
 			GEMFILE="$OPTARG"
@@ -138,13 +132,18 @@ else
 	TTY_ARGS="-t -i"
 fi
 
+vol_name="traveling-ruby-mock-$RUBY_VERSION-$ARCHITECTURE"
+docker volume ls | grep $vol_name
+
+set -x
+
 exec docker run \
 	$TTY_ARGS \
 	--rm \
 	--cap-add SYS_ADMIN --cap-add SYS_CHROOT \
 	-v "$SELFDIR/internal:/system:ro" \
 	-v "$SELFDIR/../shared:/system_shared:ro" \
-	-v "$RUNTIME_DIR/mock:/var/lib/mock" \
+	-v "$vol_name:/var/lib/mock" \
 	-v "$OUTPUT_DIR:/output" \
 	"${GEMFILE_MOUNT[@]}" \
 	-e "APP_UID=`id -u`" \
@@ -152,7 +151,6 @@ exec docker run \
 	-e "BUNDLER_VERSION=`cat \"$SELFDIR/../BUNDLER_VERSION.txt\"`" \
 	-e "ARCHITECTURE=$ARCHITECTURE" \
 	-e "RUBY_VERSION=$RUBY_VERSION" \
-	-e "CONCURRENCY=$CONCURRENCY" \
 	-e "SETUP_SOURCE=$SETUP_SOURCE" \
 	-e "COMPILE=$COMPILE" \
 	-e "SANITY_CHECK_OUTPUT=$SANITY_CHECK_OUTPUT" \

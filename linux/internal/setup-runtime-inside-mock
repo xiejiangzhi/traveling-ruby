@@ -46,9 +46,15 @@ done
 run rpm --rebuilddb
 run yum install -y @development-tools gcc gcc-c++ wget m4 sudo zlib-devel \
 	readline-devel ncurses-devel ccache compat-libtermcap \
-  autoconf automake libtool
+  autoconf automake libtool webkitgtk4-devel
 run mkdir -p /ccache
 echo
+
+if [[ -z "$(command -v go)" ]]; then
+  rpm --import https://mirror.go-repo.io/centos/RPM-GPG-KEY-GO-REPO
+  curl -s https://mirror.go-repo.io/centos/go-repo.repo | tee /etc/yum.repos.d/go-repo.repo
+  yum install golang
+fi
 
 header "Installing OpenSSL"
 if [[ ! -e /usr/local/override/bin/openssl ]]; then
@@ -99,21 +105,21 @@ if [[ ! -e "$LIBFFI_FILE" ]]; then
 fi
 echo
 
-header "Installing SQLite3"
-if [[ ! -e /usr/local/override/lib/libsqlite3.a ]]; then
-	download_and_extract sqlite-autoconf-$SQLITE3_VERSION.tar.gz \
-		http://www.sqlite.org/2019/sqlite-autoconf-$SQLITE3_VERSION.tar.gz
-	echo "Entering sqlite-autoconf-$SQLITE3_VERSION"
-	pushd sqlite-autoconf-$SQLITE3_VERSION >/dev/null
+# header "Installing SQLite3"
+# if [[ ! -e /usr/local/override/lib/libsqlite3.a ]]; then
+# 	download_and_extract sqlite-autoconf-$SQLITE3_VERSION.tar.gz \
+# 		http://www.sqlite.org/2019/sqlite-autoconf-$SQLITE3_VERSION.tar.gz
+# 	echo "Entering sqlite-autoconf-$SQLITE3_VERSION"
+# 	pushd sqlite-autoconf-$SQLITE3_VERSION >/dev/null
 
-	run ./configure --prefix=/usr/local/override --disable-shared \
-		--disable-dynamic-extensions CFLAGS='-O2 -fPIC -fvisibility=hidden'
-	run make -j$CONCURRENCY
-	run make install-strip
+# 	run ./configure --prefix=/usr/local/override --disable-shared \
+# 		--disable-dynamic-extensions CFLAGS='-O2 -fPIC -fvisibility=hidden'
+# 	run make -j$CONCURRENCY
+# 	run make install-strip
 
-	echo "Leaving source directory"
-	popd >/dev/null
-	run rm -rf sqlite-autoconf-$SQLITE3_VERSION
-fi
-echo
+# 	echo "Leaving source directory"
+# 	popd >/dev/null
+# 	run rm -rf sqlite-autoconf-$SQLITE3_VERSION
+# fi
+# echo
 

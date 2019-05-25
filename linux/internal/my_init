@@ -1,4 +1,4 @@
-#!/system/python27 -u
+#! /bin/python2.7 -u
 import os, os.path, sys, stat, signal, errno, argparse, time, json, re
 
 KILL_PROCESS_TIMEOUT = 5

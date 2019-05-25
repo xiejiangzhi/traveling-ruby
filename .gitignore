@@ -3,8 +3,10 @@
 /osx/runtime
 /osx/output
 /osx/work
+/osx/traveling-ruby-gems*
 /windows/cache
 /windows/output
 *.sublime-workspace
 *.tar.gz
 *.swp
+mkmf.log
