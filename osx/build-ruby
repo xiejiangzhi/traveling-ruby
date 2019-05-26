@@ -330,15 +330,12 @@ if [[ "$GEMFILE" != "" ]]; then
     run cp -pR "$RUNTIME_DIR/vendor" vendor
   fi
 
+  # Ruby 2.6 build-in bundler
   # Install Bundler, either from cache or directly.
-  if [[ -e "$RUNTIME_DIR/vendor/cache/bundler-$BUNDLER_VERSION.gem" ]]; then
-    run "$TMPBUILDROOT/bin/gem" install "$RUNTIME_DIR/vendor/cache/bundler-$BUNDLER_VERSION.gem" --no-document
-  else
-    run "$TMPBUILDROOT/bin/gem" install bundler -v $BUNDLER_VERSION --no-document
-    run mkdir -p "$RUNTIME_DIR/vendor/cache"
-    run cp "$TMPBUILDROOT"/lib/ruby/gems/$RUBY_COMPAT_VERSION/cache/bundler-$BUNDLER_VERSION.gem \
-      "$RUNTIME_DIR/vendor/cache/"
-  fi
+  # run "$TMPBUILDROOT/bin/gem" install bundler -v $BUNDLER_VERSION --no-document
+  # run mkdir -p "$RUNTIME_DIR/vendor/cache"
+  # run cp "$TMPBUILDROOT"/lib/ruby/gems/$RUBY_COMPAT_VERSION/cache/bundler-$BUNDLER_VERSION.gem \
+  #   "$RUNTIME_DIR/vendor/cache/"
 
   export BUNDLE_BUILD__NOKOGIRI=" "
   export BUNDLE_BUILD__MYSQL2="--with-mysql_config"

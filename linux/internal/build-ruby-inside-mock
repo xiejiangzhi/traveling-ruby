@@ -262,7 +262,8 @@ export BUNDLE_BUILD__EVENTMACHINE=--with-ldflags="'$DEFAULT_LDFLAGS -lz'"
 if [[ "$DEBUG_SHELL" = before ]]; then
 	open_debug_shell
 fi
-run /tmp/ruby/bin/gem install bundler -v $BUNDLER_VERSION --no-document
+# Ruby 2.6 build-in bundler
+# run /tmp/ruby/bin/gem install bundler -v $BUNDLER_VERSION --no-document
 if [[ -e /system/gemfiles ]]; then
   if [[ "$DEBUG_SHELL" = after ]]; then
     install_gems || true
@@ -311,10 +312,10 @@ create_wrapper /tmp/ruby/bin/ruby ruby false
 create_wrapper /tmp/ruby/bin/gem gem true
 create_wrapper /tmp/ruby/bin/irb irb true
 create_wrapper /tmp/ruby/bin/rake rake true
-if [[ -e /system/Gemfile ]]; then
+# if [[ -e /system/Gemfile ]]; then
 	create_wrapper /tmp/ruby/bin/bundle bundle true
 	create_wrapper /tmp/ruby/bin/bundler bundler true
-fi
+# fi
 echo
 
 if $SANITY_CHECK_OUTPUT; then
