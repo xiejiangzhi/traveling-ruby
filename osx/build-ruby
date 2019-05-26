@@ -353,7 +353,7 @@ if [[ "$GEMFILE" != "" ]]; then
     # We set -j to 1 because of this bug:
     # https://github.com/bundler/bundler/issues/3660
     # When it is solved, we can set -j to $CONCURRENCY.
-    run "$TMPBUILDROOT/bin/bundle" install --system --retry 3 --jobs 1
+    run "$TMPBUILDROOT/bin/bundle" install --system --retry 3 --jobs 4
     run "$TMPBUILDROOT/bin/bundle" package
 
     # Cache gems.
@@ -379,7 +379,7 @@ run rm -rf include
 run rm -rf share
 run rm -rf lib/{libruby-static.a,pkgconfig}
 run rm -rf lib/ruby/$RUBY_COMPAT_VERSION/rdoc/generator/
-run rm -f lib/ruby/gems/$RUBY_COMPAT_VERSION/cache/*
+run rm -rf lib/ruby/gems/$RUBY_COMPAT_VERSION/cache/*
 run rm -f lib/ruby/gems/$RUBY_COMPAT_VERSION/extensions/$GEM_PLATFORM/$GEM_EXTENSION_API_VERSION/*/{gem_make.out,mkmf.log}
 run rm -rf lib/ruby/gems/$RUBY_COMPAT_VERSION/gems/*/{test,spec,*.md,*.rdoc}
 run rm -rf lib/ruby/gems/$RUBY_COMPAT_VERSION/gems/*/ext/*/*.{c,h}
