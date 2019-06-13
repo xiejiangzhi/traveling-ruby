@@ -199,6 +199,9 @@ popd >/dev/null
 echo "+ Leaving Bundler gem directory"
 
 # Create wrapper scripts.
+if [[ ! -f bin/bundle ]]; then
+  run cp bin/bundle.cmd bin/bundle
+fi
 run mv bin bin.real
 run mkdir -p bin
 run create_wrapper bin/ruby.cmd ruby false
